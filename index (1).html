@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UApps — Ritme Harian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1f8;--surface:#fff;--soft:#e3e8f4;--line:#d5dbea;--ink:#1b2140;--muted:#545c7e;
+  --primary:#3d4fd1;--on-primary:#fff;--sun:#ffb020;--late:#c2303a;--ok:#0f735f;
+  --shadow:0 18px 40px rgba(27,33,64,.22);color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#12162e;--surface:#1b2042;--soft:#262c55;--line:#333a69;--ink:#eef0ff;--muted:#a9b0d6;
+  --primary:#9aa8ff;--on-primary:#12162e;--sun:#ffc24d;--late:#ff8b91;--ok:#62d6bb;
+  --shadow:0 18px 40px rgba(0,0,0,.5);color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+h1,h2,h3,.display{font-family:'Bricolage Grotesque','Plus Jakarta Sans',sans-serif;line-height:1.15;letter-spacing:-.015em}
+h1{font-size:clamp(28px,4vw,40px)}
+h2{font-size:20px;margin-bottom:12px}
+.muted{color:var(--muted)}.small{font-size:13px}
+[hidden]{display:none!important}
+
+/* Tombol & Input persis gaya awal */
+.btn{padding:8px 16px;border-radius:11px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.primary{background:var(--primary);color:var(--on-primary)}
+.btn.ghost{border:1.5px solid var(--line);background:var(--surface)}
+.btn.ghost:hover{border-color:var(--primary)}
+.btn.text{color:var(--primary);padding:6px 8px}
+.btn.sm{padding:6px 12px;font-size:13px;border-radius:9px}
+.field{border:1.5px solid var(--line);background:var(--bg);border-radius:11px;padding:8px 12px;min-width:0;width:100%}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;background:var(--soft);color:var(--ink)}
+.tag.primary{background:var(--primary);color:var(--on-primary)}
+
+/* Logo UApps sederhana & bersih */
+.brand-mark{display:inline-flex;align-items:center;gap:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700}
+.u-logo{width:28px;height:28px;flex:none;display:block}
+.u-logo.lg{width:64px;height:64px}
+
+/* Welcome / Loading Screen bersih dengan motion text */
+.welcome{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;transition:opacity .45s ease}
+.welcome.leaving{opacity:0;pointer-events:none}
+.welcome-logo{margin-bottom:20px;animation:popIn .6s cubic-bezier(.22,1,.36,1) both}
+.welcome-logo .u-path{stroke-dasharray:120;stroke-dashoffset:120;animation:drawStroke .85s .1s ease forwards}
+.welcome-logo .u-sun{transform-origin:24px 10px;animation:popIn .5s .45s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes drawStroke{to{stroke-dashoffset:0}}
+@keyframes popIn{0%{opacity:0;transform:scale(.82)}100%{opacity:1;transform:scale(1)}}
+.welcome-title{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(26px,4.5vw,38px);font-weight:700;display:flex;flex-wrap:wrap;justify-content:center;gap:0 .26em}
+.welcome-word{display:inline-block;opacity:0;transform:translateY(12px);animation:wordUp .55s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes wordUp{to{opacity:1;transform:translateY(0)}}
+.welcome-sub{margin-top:8px;color:var(--muted);font-size:14px;opacity:0;animation:wordUp .5s .45s ease forwards}
+.welcome-track{width:min(200px,60vw);height:4px;border-radius:99px;background:var(--soft);overflow:hidden;margin-top:22px;opacity:0;animation:wordUp .4s .35s forwards}
+.welcome-bar{height:100%;width:0%;background:var(--primary);border-radius:99px;transition:width 1.8s cubic-bezier(.22,1,.36,1)}
+.welcome-skip{position:absolute;bottom:24px;font-size:13px;color:var(--muted);padding:6px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--surface)}
+
+/* Landing Page dengan kartu panel bersih */
+.lp-wrap{width:100%;max-width:1040px;margin:0 auto;padding:20px 32px 80px}
+.lp-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:36px}
+.lp-hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;align-items:center;margin-bottom:36px}
+.lp-hero h1{margin:12px 0}
+.lp-cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.seg{display:inline-flex;background:var(--soft);border-radius:13px;padding:4px;margin:16px 0;flex-wrap:wrap;gap:2px}
+.seg button{padding:6px 16px;border-radius:10px;font-weight:600}
+.seg [aria-pressed="true"]{background:var(--surface)}
+.lp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:24px}
+
+/* Auth & Onboarding */
+.auth-wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
+.auth-box{width:min(440px,100%);background:var(--surface);border-radius:20px;padding:24px}
+.onb-box{width:min(640px,100%);background:var(--surface);border-radius:20px;padding:24px}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.choice{padding:14px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);text-align:left;display:grid;gap:4px}
+.choice[aria-pressed="true"]{border-color:var(--primary);background:var(--surface)}
+.err{background:var(--soft);color:var(--late);padding:10px 12px;border-radius:11px;font-size:13px;font-weight:600;margin-bottom:12px}
+
+/* Layout Aplikasi Utama persis awal */
+.app{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
+nav{position:sticky;top:0;height:100vh;padding:20px 12px;display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--line)}
+.brand{font-size:22px;font-weight:700;padding:0 12px 20px}
+.nav-btn{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:12px;color:var(--muted);font-weight:600;text-align:left}
+.nav-btn:hover{background:var(--soft);color:var(--ink)}
+.nav-btn[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.nav-btn svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nav-foot{margin-top:auto;display:grid;gap:4px}
+.user-pill{padding:10px 12px;border-radius:12px;background:var(--surface);margin-bottom:6px}
+.user-pill strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-pill span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+main{width:100%;max-width:1040px;margin:0 auto;padding:20px 32px 120px;min-width:0}
+
+.top{display:flex;gap:8px;align-items:flex-start;margin-bottom:28px}
+.quick{flex:1;min-width:0}
+.quick-row{display:flex;gap:8px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:6px 6px 6px 16px}
+.quick-row:focus-within{border-color:var(--primary)}
+.quick input{flex:1;min-width:0;border:0;background:none;outline:0}
+.preview{min-height:22px;padding:4px 16px 0;font-size:13px;color:var(--muted)}
+.preview b{color:var(--primary)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:6px 4px 0}
+.chip{font-size:12px;padding:4px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.chip:hover{border-color:var(--primary);color:var(--ink)}
+.top-tools{position:relative;display:flex;gap:8px;flex:none}
+.square{font-size:22px!important;width:49px;height:49px;flex:none;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);position:relative;font-weight:700;display:grid;place-items:center}
+.badge{font-family:system-ui;position:absolute;top:-6px;right:-6px;background:var(--late);color:var(--surface);border-radius:99px;font-size:11px;min-width:20px;padding:0 5px;line-height:20px}
+
+/* Popover Widget Kalender */
+.cal-pop{position:absolute;right:0;top:58px;width:min(330px,calc(100vw - 32px));background:var(--surface);border:1.5px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);z-index:25}
+
+/* Baris atas: Streak & To-do sejajar */
+.top-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:20px 0 8px}
+.top-cards>.panel{display:flex;flex-direction:column;justify-content:space-between}
+
+/* Elemen khas: langit satu hari */
+.sky{position:relative;height:190px;border-radius:24px;overflow:hidden;margin:18px 0 8px;
+  background:linear-gradient(90deg,#171c46 0%,#252a66 18%,#c9638a 24%,#ffc98b 29%,#8fcbf5 40%,#6fb6f2 58%,#a8d3f3 68%,#f59a5c 74%,#7a4a92 79%,#252a66 87%,#171c46 100%)}
+.ground{position:absolute;inset:auto 0 0;height:56px;background:rgba(12,15,40,.78)}
+.hour{position:absolute;bottom:8px;transform:translateX(-50%);color:#dfe3ff;font-size:11px}
+.past{position:absolute;inset:0 auto 56px 0;background:rgba(10,12,34,.22)}
+.now{position:absolute;top:0;bottom:0;width:2px;background:#fff;transform:translateX(-1px)}
+.orb{position:absolute;width:30px;height:30px;border-radius:50%;transform:translate(-50%,-50%);background:#ffd45c;box-shadow:0 0 0 8px rgba(255,212,92,.3),0 0 40px 10px rgba(255,212,92,.55)}
+.orb.moon{background:#eef0ff;box-shadow:0 0 0 7px rgba(238,240,255,.16),inset -9px -5px 0 #b9bfea}
+.pin{position:absolute;bottom:34px;width:22px;height:22px;margin-left:-11px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);background:#fff;border:5px solid #3d4fd1}
+.pin.late{border-color:#d9363e}.pin.done{border-color:#12806a;opacity:.7}
+.pin:hover,.pin:focus-visible{transform:rotate(-45deg) scale(1.3)}
+
+.cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px;margin-top:24px}
+.cols>div{display:grid;gap:24px;align-content:start}
+.panel{background:var(--surface);border-radius:20px;padding:20px}
+.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.check{width:26px;height:26px;flex:none;border-radius:9px;border:2px solid var(--muted);display:grid;place-items:center;font-weight:700;color:transparent}
+.check[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.grow{flex:1;min-width:0;overflow-wrap:anywhere;text-align:left}
+.done-text{text-decoration:line-through;color:var(--muted)}
+.time{font-weight:700;font-variant-numeric:tabular-nums;width:48px;flex:none}
+.late-text{color:var(--late);font-weight:600}
+.icon{width:32px;height:32px;border-radius:9px;color:var(--muted);flex:none;display:inline-grid;place-items:center}
+.icon:hover{background:var(--soft);color:var(--ink)}
+.group{font-size:13px;font-weight:700;margin:18px 0 2px}
+.group:first-child{margin-top:0}
+.empty{padding:20px 0;color:var(--muted)}
+.inline{display:flex;gap:8px;margin-top:12px}
+
+.days{display:flex;gap:6px;margin-top:12px}
+.day{flex:1;text-align:center;font-size:11px;color:var(--muted)}
+.dot{height:30px;border-radius:9px;background:var(--soft);margin-bottom:4px}
+.dot.on{background:var(--sun)}
+
+/* Widget Kalender Mini */
+.wcal-head{display:flex;align-items:center;gap:4px;margin-bottom:10px}
+.wcal-head h2,.wcal-head h3{margin:0;flex:1;font-size:17px}
+.wcal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.wcal-dow{font-size:11px;color:var(--muted);padding-bottom:4px}
+.wcal-day{aspect-ratio:1;border-radius:9px;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1.5px solid transparent}
+.wcal-day:hover{background:var(--soft)}
+.wcal-day.today{background:var(--sun);color:#1b2140}
+.wcal-day[aria-pressed="true"]{border-color:var(--primary)}
+.wcal-dots{display:flex;gap:2px;height:4px}
+.wcal-dots i{width:4px;height:4px;border-radius:50%;background:var(--primary);display:block}
+.wcal-dots i.done{background:var(--ok)}.wcal-dots i.late{background:var(--late)}
+.wcal-sub{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.wcal-row{display:flex;align-items:center;gap:8px;width:100%;padding:6px 8px;border-radius:9px;text-align:left;font-size:13px}
+.wcal-row:hover{background:var(--soft)}
+
+/* Halaman Jadwal & Progres */
+.cal-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cal-head h2{margin:0;flex:1}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.cal span{text-align:center;font-size:12px;color:var(--muted)}
+.cell{min-height:72px;border-radius:11px;background:var(--bg);padding:6px;text-align:left;display:flex;flex-direction:column;gap:3px;border:2px solid transparent}
+.cell.today b{background:var(--sun);color:#1b2140;border-radius:6px;padding:0 5px;align-self:flex-start}
+.cell[aria-pressed="true"]{border-color:var(--primary)}
+.ev{font-size:11px;background:var(--soft);border-radius:5px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.bars{display:flex;align-items:flex-end;gap:10px;height:180px}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%;font-size:12px;color:var(--muted)}
+.stack{width:100%;max-width:46px;background:var(--soft);border-radius:9px;display:flex;align-items:flex-end;overflow:hidden;min-height:4px}
+.fill{width:100%;background:var(--ok)}
+
+/* Catatan & Folder File */
+.notes{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;margin-top:18px}
+.folder-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.fpill{padding:5px 10px;border-radius:9px;font-size:12px;font-weight:600;background:var(--surface);color:var(--muted)}
+.fpill[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.note-list{display:grid;gap:6px;align-content:start}
+.note-item{padding:10px 12px;border-radius:12px;text-align:left;background:transparent;display:grid;gap:3px}
+.note-item:hover{background:var(--soft)}
+.note-item[aria-current="true"]{background:var(--surface);font-weight:700}
+.note-item-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.editor{position:relative;min-height:430px;display:flex;flex-direction:column}
+.editor-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.title-in{border:0;background:none;font:700 28px 'Bricolage Grotesque',sans-serif;width:100%}
+.editor textarea{flex:1;border:0;background:none;resize:vertical;min-height:280px;line-height:1.75;margin-top:12px}
+.slash{position:absolute;left:20px;right:20px;bottom:56px;max-width:320px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:6px;box-shadow:var(--shadow);display:none}
+.slash.open{display:grid}
+.opt{display:flex;justify-content:space-between;gap:12px;width:100%;padding:9px 12px;border-radius:9px;text-align:left}
+.opt.sel,.opt:hover{background:var(--soft)}
+
+dialog{margin:auto;width:min(480px,calc(100vw - 32px));border:0;border-radius:22px;background:var(--surface);color:var(--ink);padding:22px;box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(10,12,34,.6)}
+.form{display:grid;gap:12px}.form label{display:grid;gap:4px;font-size:13px;font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px;flex-wrap:wrap}
+#results{max-height:300px;overflow:auto;margin-top:10px}
+.ring{width:70px;height:70px;border-radius:50%;background:var(--sun);margin:0 auto 14px;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.14)}}
+
+.floating{position:fixed;right:20px;bottom:20px;display:grid;gap:8px;z-index:20;justify-items:end;max-width:calc(100vw - 40px)}
+.toast,.focusbar{display:flex;gap:12px;align-items:center;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:14px;box-shadow:var(--shadow)}
+.toast button,.focusbar button{font-weight:700;text-decoration:underline}
+.focusbar b{font-variant-numeric:tabular-nums;font-size:20px}
+
+@media(max-width:860px){
+  .app{display:block}
+  nav{position:fixed;inset:auto 0 0 0;height:auto;flex-direction:row;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:var(--surface);border:0;border-top:1px solid var(--line);z-index:10}
+  .brand,.nav-foot{display:none}
+  .nav-btn{flex:1;flex-direction:column;gap:2px;font-size:11px;padding:7px 2px}
+  main,.lp-wrap{padding:16px 16px 150px}
+  .lp-hero,.lp-grid,.top-cards,.cols,.notes{grid-template-columns:minmax(0,1fr)}
+  .note-list{display:flex;overflow-x:auto}.note-item{flex:none;width:190px;background:var(--surface)}
+  .floating{bottom:84px}
+  .cell{min-height:50px;padding:3px;align-items:center}
+  .ev{width:7px;height:7px;padding:0;font-size:0;background:var(--primary);border-radius:50%}
+  .hour:nth-of-type(even){display:none}
+  .top .mobile-top{display:grid}
+}
+@media(min-width:861px){.top .mobile-top{display:none}}
+@media(max-width:520px){.two,.choice-grid{grid-template-columns:1fr}.quick-row .btn{padding:8px 12px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.welcome-word,.welcome-sub,.welcome-track{opacity:1!important;transform:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ==================== 0. WELCOME / LOADING SCREEN ==================== -->
+<div id="welcomeOverlay" class="welcome" role="status" aria-live="polite" hidden>
+  <div class="welcome-logo" aria-hidden="true">
+    <svg class="u-logo lg" viewBox="0 0 48 48" fill="none">
+      <rect x="2" y="2" width="44" height="44" rx="14" fill="var(--primary)"/>
+      <path class="u-path" d="M16 15V26C16 30.4183 19.5817 34 24 34C28.4183 34 32 30.4183 32 26V21" stroke="var(--on-primary)" stroke-width="4.2" stroke-linecap="round"/>
+      <circle class="u-sun" cx="32" cy="14" r="3.6" fill="var(--sun)"/>
+    </svg>
+  </div>
+  <div class="welcome-title" id="welcomeTitle"></div>
+  <p class="welcome-sub" id="welcomeSub"></p>
+  <div class="welcome-track"><div class="welcome-bar" id="welcomeBar"></div></div>
+  <button type="button" class="welcome-skip" data-act="skipWelcome">Lewati →</button>
+</div>
+
+<!-- ==================== 1. LANDING PAGE ==================== -->
+<div id="landingScreen" hidden>
+  <div class="lp-wrap">
+    <header class="lp-top">
+      <div class="brand-mark" style="font-size:22px">
+        <svg class="u-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="44" height="44" rx="14" fill="var(--primary)"/>
+          <path d="M16 15V26C16 30.4183 19.5817 34 24 34C28.4183 34 32 30.4183 32 26V21" stroke="var(--on-primary)" stroke-width="4.2" stroke-linecap="round"/>
+          <circle cx="32" cy="14" r="3.6" fill="var(--sun)"/>
+        </svg>
+        <span>UApps</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="icon" data-act="theme" aria-label="Ganti tema">◐</button>
+        <button class="btn ghost" data-act="openAuth" data-id="login">Masuk</button>
+        <button class="btn primary" data-act="openAuth" data-id="signup">Daftar Gratis</button>
+      </div>
+    </header>
+
+    <section class="lp-hero">
+      <div>
+        <span class="tag">Ritme Harian Personal</span>
+        <h1>Atur jadwal, tugas, dan catatan sesuai peranmu.</h1>
+        <p class="muted">UApps menyesuaikan templat kerja harian berdasarkan statusmu—baik sebagai Mahasiswa, Pekerja, Freelancer, maupun Pelajar—dalam satu tampilan tenang dan bebas gangguan.</p>
+        <div class="lp-cta">
+          <button class="btn primary" data-act="openAuth" data-id="signup">Mulai Sekarang</button>
+          <button class="btn ghost" data-act="quickDemo">Coba Demo Instan</button>
+        </div>
+      </div>
+
+      <div class="panel" aria-hidden="true">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong class="display">Selamat pagi, Nadia</strong>
+          <span class="tag">5 hari beruntun</span>
+        </div>
+        <div class="sky" style="height:120px;margin:10px 0">
+          <div class="past" style="width:52%"></div>
+          <div class="ground" style="height:36px"></div>
+          <div class="now" style="left:52%"></div>
+          <div class="orb" style="left:52%;top:48px"></div>
+        </div>
+        <div class="item"><span class="time">09:00</span><span class="grow done-text">Bimbingan dosen pembimbing</span><span class="small" style="color:var(--ok);font-weight:700">✓</span></div>
+        <div class="item"><span class="time">15:00</span><span class="grow">Revisi BAB 3 &amp; olah data</span><span class="small muted">▶ 25m</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Contoh pemakaian di kehidupan nyata</h2>
+      <p class="muted">Pilih profil untuk melihat bagaimana UApps otomatis menyiapkan jadwal, pengingat tugas, dan folder catatan.</p>
+      <div class="seg" role="tablist" aria-label="Contoh peran pengguna">
+        <button role="tab" data-act="lpTab" data-id="mahasiswa" aria-pressed="true">Mahasiswa</button>
+        <button role="tab" data-act="lpTab" data-id="pekerja" aria-pressed="false">Pekerja</button>
+        <button role="tab" data-act="lpTab" data-id="freelancer" aria-pressed="false">Freelancer</button>
+        <button role="tab" data-act="lpTab" data-id="pelajar" aria-pressed="false">Pelajar &amp; Umum</button>
+      </div>
+      <div id="lpShowcase"></div>
+
+      <div class="lp-grid">
+        <div class="panel">
+          <h3>Langit Satu Hari</h3>
+          <p class="small muted" style="margin-top:6px">Posisi matahari, bulan, dan penanda jadwal bergerak mengikuti jam saat ini agar sisa waktu hari ini langsung terbaca.</p>
+        </div>
+        <div class="panel">
+          <h3>Input Bahasa Alami</h3>
+          <p class="small muted" style="margin-top:6px">Cukup ketik <i>"Kumpul tugas besok jam 20.00"</i> atau <i>"Rapat tim Jumat pagi"</i>—tanggal dan jam otomatis terdeteksi.</p>
+        </div>
+        <div class="panel">
+          <h3>Folder File Catatan</h3>
+          <p class="small muted" style="margin-top:6px">Pisahkan catatan tugas, kuliah/kerja, dan jurnal sehari-hari. Ketik <code>/todo</code> atau <code>/jadwal</code> langsung di dalam teks.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ==================== 2. LOGIN & SIGN UP ==================== -->
+<div id="authScreen" class="auth-wrap" hidden>
+  <div class="auth-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <button class="btn text" style="padding-left:0" data-act="backLanding">← Beranda</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="brand-mark">
+          <svg class="u-logo" style="width:22px;height:22px" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="44" height="44" rx="14" fill="var(--primary)"/>
+            <path d="M16 15V26C16 30.4183 19.5817 34 24 34C28.4183 34 32 30.4183 32 26V21" stroke="var(--on-primary)" stroke-width="4.2" stroke-linecap="round"/>
+            <circle cx="32" cy="14" r="3.6" fill="var(--sun)"/>
+          </svg>
+          UApps
+        </span>
+        <button class="icon" data-act="theme" aria-label="Ganti tema">◐</button>
+      </div>
+    </div>
+
+    <h1 style="font-size:28px" id="authHeading">Masuk ke UApps</h1>
+    <p class="small muted" id="authSub">Lanjutkan jadwal, catatan, dan progres harianmu.</p>
+
+    <div class="seg" role="tablist">
+      <button role="tab" data-act="switchAuth" data-id="login" aria-pressed="true">Masuk</button>
+      <button role="tab" data-act="switchAuth" data-id="signup" aria-pressed="false">Daftar Baru</button>
+    </div>
+
+    <div id="authError" class="err" hidden></div>
+
+    <form id="authForm" class="form" autocomplete="on">
+      <label id="nameFieldWrap" hidden>Nama Lengkap<input class="field" name="name" id="authName" placeholder="Contoh: Raka Pratama"></label>
+      <label>Email<input class="field" type="email" name="email" id="authEmail" placeholder="nama@email.com" required></label>
+      <label>Kata Sandi<input class="field" type="password" name="password" id="authPass" placeholder="Minimal 4 karakter" minlength="4" required></label>
+      <button type="submit" class="btn primary" style="width:100%;margin-top:4px" id="authSubmitBtn">Masuk</button>
+    </form>
+
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line);text-align:center">
+      <button class="btn text small" data-act="quickDemo">Coba Demo Instan tanpa daftar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 3. ONBOARDING STATUS & JABATAN ==================== -->
+<div id="onboardingScreen" class="auth-wrap" hidden>
+  <div class="onb-box" id="onbCard"></div>
+</div>
+
+<!-- ==================== 4. APLIKASI UTAMA UAPPS ==================== -->
+<div id="appScreen" class="app" hidden>
+  <nav id="nav" aria-label="Menu utama"></nav>
+  <main>
+    <div class="top">
+      <form class="quick" id="quickForm" autocomplete="off">
+        <div class="quick-row">
+          <input id="quickInp" aria-label="Tambah jadwal cepat" placeholder="Rapat tim besok jam 14.00">
+          <button class="btn primary">Tambah</button>
+        </div>
+        <div class="preview" id="preview" aria-live="polite">Ketik kegiatan beserta waktunya, lalu tekan Enter.</div>
+        <div class="chips" id="quickChips"></div>
+      </form>
+      <div class="top-tools">
+        <button class="square" data-act="toggleCalWidget" id="calWidgetBtn" aria-expanded="false" aria-controls="calPopover" aria-label="Widget Kalender Cepat" title="Widget Kalender">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        </button>
+        <button class="square" data-act="search" aria-label="Cari (Ctrl+K)" title="Cari (Ctrl+K)">⌕</button>
+        <button class="square mobile-top" data-act="openProfileMenu" aria-label="Profil & Keluar" title="Profil">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 14.5-4 16 0"/></svg>
+        </button>
+        <button class="square mobile-top" data-act="theme" aria-label="Ganti tema">◐</button>
+        <div class="cal-pop" id="calPopover" role="dialog" aria-label="Widget Kalender Cepat" hidden></div>
+      </div>
+    </div>
+    <div id="view"></div>
+  </main>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle"></dialog>
+<div class="floating">
+  <div id="toasts" role="status"></div>
+  <div class="focusbar" id="focusbar" hidden><b id="focusTime"></b><span id="focusName"></span><button data-act="stopFocus">Berhenti</button></div>
+</div>
+
+<script>
+'use strict';
+const KEY='uapps_v4', USERS_KEY='uapps_users_v1', SESSION_KEY='uapps_session_v1', OLD_KEY='uapps_v2';
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>iso(new Date());
+const addDays=(n,from=new Date())=>{const d=new Date(from);d.setDate(d.getDate()+n);return d};
+const at=s=>new Date(`${s.date}T${s.time}`);
+const isLate=s=>!s.done&&at(s)<new Date();
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const fmt=(d,o)=>new Intl.DateTimeFormat('id-ID',o).format(d);
+const niceDate=s=>s===today()?'Hari ini':s===iso(addDays(1))?'Besok':s===iso(addDays(-1))?'Kemarin':fmt(new Date(s+'T12:00'),{weekday:'short',day:'numeric',month:'short'});
+const byTime=(a,b)=>at(a)-at(b);
+
+/* ---------- Logo SVG ---------- */
+function logoSVG(cls='u-logo'){
+  return `<svg class="${cls}" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <rect x="2" y="2" width="44" height="44" rx="14" fill="var(--primary)"/>
+    <path d="M16 15V26C16 30.4183 19.5817 34 24 34C28.4183 34 32 30.4183 32 26V21" stroke="var(--on-primary)" stroke-width="4.2" stroke-linecap="round"/>
+    <circle cx="32" cy="14" r="3.6" fill="var(--sun)"/>
+  </svg>`;
+}
+
+/* ---------- Katalog Peran, Jabatan & Templat ---------- */
+const ROLE_CATALOG={
+  mahasiswa:{
+    id:'mahasiswa',label:'Mahasiswa',
+    desc:'Manajemen waktu kuliah, pengingat deadline tugas, praktikum, dan jadwal bimbingan.',
+    lpTitle:'Mahasiswa: Kuliah & Tugas Terkendali',
+    lpDesc:'Biasanya dipakai mahasiswa untuk time management jadwal kuliah, pengingat tenggat tugas/makalah, sesi fokus belajar 25 menit, serta memisahkan catatan tugas dan catatan sehari-hari.',
+    lpPoints:[
+      'Alarm pengingat sebelum deadline pengumpulan tugas & jadwal kuliah',
+      'Timer fokus 25 menit untuk membaca jurnal atau revisi skripsi',
+      'Folder catatan terpisah antara Catatan Tugas dan Sehari-hari'
+    ],
+    lpSchedules:[
+      {time:'08:30',title:'Kuliah Metodologi Penelitian (Ruang B204)'},
+      {time:'14:00',title:'Diskusi Kelompok & Pembagian Bab Makalah'},
+      {time:'20:00',title:'Deadline Upload Tugas di Portal Kampus'}
+    ],
+    lpTodos:['Rangkum 3 jurnal referensi utama','Konfirmasi jadwal bimbingan ke dosen PA'],
+    lpChips:['Kuliah besok jam 08.00','Deadline tugas Jumat jam 23.00','Belajar ujian malam ini'],
+    subroles:[
+      {id:'mhs_s1',label:'Mahasiswa Sarjana (S1 / D3 / D4)',desc:'Jadwal mata kuliah, praktikum, dan tugas mingguan'},
+      {id:'mhs_skripsi',label:'Mahasiswa Tingkat Akhir / Skripsi',desc:'Jadwal bimbingan dosen, olah data, dan revisi bab'},
+      {id:'mhs_pasca',label:'Mahasiswa Pascasarjana (S2 / S3)',desc:'Seminar riset, penulisan tesis, dan publikasi'},
+      {id:'mhs_org',label:'Aktivis Organisasi / BEM / UKM',desc:'Seimbangkan kuliah dengan rapat kepanitiaan'}
+    ]
+  },
+  pekerja:{
+    id:'pekerja',label:'Pekerja',
+    desc:'Daily standup, jadwal rapat tim, target kerja harian, dan evaluasi progres.',
+    lpTitle:'Pekerja: Rapat Teratur, Target Selesai Tepat Waktu',
+    lpDesc:'Membantu pekerja kantoran maupun remote memetakan jam rapat di langit harian, memecah proyek besar menjadi langkah kecil, dan mencatat notulensi kerja.',
+    lpPoints:[
+      'Visualisasi langit 24 jam memperlihatkan sisa waktu kosong di antara rapat',
+      'Fitur Pecah Tugas untuk membagi proyek menjadi langkah konkret',
+      'Notulensi rapat yang bisa langsung diubah menjadi to-do'
+    ],
+    lpSchedules:[
+      {time:'09:30',title:'Daily Standup & Sinkronisasi Prioritas Tim'},
+      {time:'14:00',title:'Presentasi Progres ke Stakeholder'},
+      {time:'16:30',title:'Kirim Rekap Laporan & Follow-up Klien'}
+    ],
+    lpTodos:['Review dokumen proposal masuk','Balas email konfirmasi vendor'],
+    lpChips:['Rapat tim besok jam 10.00','Follow-up klien sore ini','Kirim laporan Jumat jam 16.00'],
+    subroles:[
+      {id:'wrk_staff',label:'Staff / Eksekutif / Spesialis',desc:'Eksekusi tugas harian, koordinasi, dan laporan rutin'},
+      {id:'wrk_lead',label:'Team Lead / Supervisor',desc:'Pembagian tugas tim, review hasil kerja, dan standup'},
+      {id:'wrk_mgr',label:'Manager / Head / Direktur',desc:'Rapat strategis, evaluasi KPI, dan pengambilan keputusan'},
+      {id:'wrk_remote',label:'Pekerja Remote / Hybrid',desc:'Jaga batas jam kerja dan blok waktu fokus mandiri'}
+    ]
+  },
+  freelancer:{
+    id:'freelancer',label:'Freelancer',
+    desc:'Kelola beberapa proyek klien, jadwal pitching, dan tenggat revisi.',
+    lpTitle:'Freelancer & Founder: Banyak Klien Tetap Rapi',
+    lpDesc:'Memisahkan jadwal meeting klien, waktu produksi karya, dan pengingat penagihan invoice dalam satu dasbor ringan.',
+    lpPoints:[
+      'Folder catatan khusus brief klien vs catatan harian pribadi',
+      'Pengingat tenggat pengiriman draf dan termin invoice',
+      'Check-in harian untuk menjaga konsistensi kerja mandiri'
+    ],
+    lpSchedules:[
+      {time:'10:00',title:'Discovery Call & Pitching Klien Baru'},
+      {time:'13:30',title:'Deep Work: Produksi Aset Proyek'},
+      {time:'19:00',title:'Kirim Preview & Invoice Termin 1'}
+    ],
+    lpTodos:['Update portofolio studi kasus terbaru','Cek pembayaran invoice jatuh tempo'],
+    lpChips:['Meeting klien besok jam 11.00','Kirim invoice sore ini','Deep work besok pagi'],
+    subroles:[
+      {id:'fr_freelance',label:'Freelancer / Konsultan Independen',desc:'Deadline beberapa klien dan penagihan invoice'},
+      {id:'fr_creator',label:'Content Creator / Desainer / Dev',desc:'Produksi konten, coding sprint, dan jadwal upload'},
+      {id:'fr_founder',label:'Founder / Pemilik Bisnis / UMKM',desc:'Operasional harian, pitching mitra, dan evaluasi'}
+    ]
+  },
+  pelajar:{
+    id:'pelajar',label:'Pelajar & Umum',
+    desc:'Jadwal belajar mandiri, persiapan ujian, dan rutinitas sehari-hari.',
+    lpTitle:'Pelajar & Umum: Bangun Kebiasaan Baik Tiap Hari',
+    lpDesc:'Cocok untuk pelajar sekolah, pencari kerja, atau siapa saja yang ingin menata rutinitas harian dengan sederhana.',
+    lpPoints:[
+      'Pelacak hari beruntun (streak) untuk menjaga konsistensi',
+      'Alarm lembut untuk jadwal belajar dan waktu istirahat',
+      'Tampilan bersih dan mudah dipahami sejak pertama dibuka'
+    ],
+    lpSchedules:[
+      {time:'07:00',title:'Pelajaran Utama & Latihan Soal'},
+      {time:'15:30',title:'Belajar Kelompok / Les Tambahan'},
+      {time:'19:30',title:'Review Materi Hari Ini (30 Menit)'}
+    ],
+    lpTodos:['Siapkan buku untuk jadwal besok','Kerjakan 1 paket latihan soal'],
+    lpChips:['Belajar malam ini jam 19.30','Latihan soal besok sore','Olahraga Sabtu pagi'],
+    subroles:[
+      {id:'pl_sma',label:'Pelajar SMA / SMK / Sederajat',desc:'Jadwal sekolah, PR, dan persiapan ujian masuk kampus'},
+      {id:'pl_job',label:'Fresh Graduate / Pencari Kerja',desc:'Jadwal kirim lamaran, latihan interview, dan portofolio'},
+      {id:'pl_umum',label:'Umum / Rutinitas Pribadi',desc:'Manajemen waktu harian, olahraga, dan agenda pribadi'}
+    ]
+  }
+};
+
+function buildTemplateForProfile(roleId,subroleId,focusField=''){
+  const mk=(title,offset,time,done=false)=>({id:uid(),title,date:iso(addDays(offset)),time,done,doneAt:done?iso(addDays(offset)):null,fired:done,sample:true});
+  const sfx=focusField?` (${focusField})`:'';
+  const map={
+    mhs_skripsi:{
+      schedules:[mk(`Bimbingan dosen pembimbing${sfx}`,0,'10:00',true),mk('Revisi BAB 3 & tinjauan pustaka',0,'15:00'),mk('Olah data & cek sitasi referensi',1,'09:30')],
+      todos:[{id:uid(),text:'Cek kemiripan naskah sebelum submit',done:false,sample:true},{id:uid(),text:'Rapikan daftar pustaka sesuai pedoman',done:false,sample:true}],
+      notes:[
+        {id:uid(),folder:'tugas',title:`Catatan Tugas & Revisi Skripsi${sfx}`,updatedAt:today(),body:'Daftar revisi dari dosen:\n1. Perjelas rumusan masalah.\n2. Tambahkan 3 referensi jurnal terbaru.\n\nTips: ketik /todo di akhir baris untuk memindahkannya ke To-do.'},
+        {id:uid(),folder:'harian',title:'Catatan Sehari-hari',updatedAt:today(),body:'Pengingat harian:\n- Jaga pola tidur dan istirahat sejenak setelah sesi fokus.'}
+      ],
+      chips:['Bimbingan besok jam 10.00','Revisi BAB malam ini','Deadline draft Jumat jam 16.00']
+    },
+    mhs_s1:{
+      schedules:[mk(`Kuliah pagi${sfx}`,0,'08:00',true),mk('Diskusi kelompok & pembagian tugas',0,'14:00'),mk('Kerjakan tugas mingguan',0,'19:30')],
+      todos:[{id:uid(),text:'Unduh slide materi kuliah minggu ini',done:false,sample:true},{id:uid(),text:'Upload tugas ke portal kampus sebelum tenggat',done:false,sample:true}],
+      notes:[
+        {id:uid(),folder:'tugas',title:`Daftar Tugas Kuliah${sfx}`,updatedAt:today(),body:'Tugas minggu ini:\n- Makalah kelompok (kumpul Jumat pukul 23.00)\n- Rangkuman bab 2\n\nKetik /todo di akhir baris untuk menambahkannya ke To-do.'},
+        {id:uid(),folder:'harian',title:'Catatan Sehari-hari',updatedAt:today(),body:'Agenda pribadi:\n- Belanja kebutuhan bulanan akhir pekan ini.'}
+      ],
+      chips:['Kuliah besok jam 08.00','Deadline tugas Jumat jam 23.00','Belajar kelompok besok sore']
+    },
+    wrk_lead:{
+      schedules:[mk(`Daily standup tim${sfx}`,0,'09:30',true),mk('Review hasil kerja tim',0,'13:30'),mk('1-on-1 check-in anggota tim',0,'16:00')],
+      todos:[{id:uid(),text:'Review laporan mingguan tim',done:false,sample:true},{id:uid(),text:'Cek blocker proyek sebelum akhir hari',done:false,sample:true}],
+      notes:[
+        {id:uid(),folder:'tugas',title:`Tugas Tim & Notulensi Standup${sfx}`,updatedAt:today(),body:'Prioritas tim minggu ini:\n- Finalisasi rilis utama\n- Tindak lanjut kendala lintas divisi'},
+        {id:uid(),folder:'harian',title:'Catatan Sehari-hari',updatedAt:today(),body:'Catatan pribadi:\n- Selesaikan evaluasi sebelum pukul 18.00.'}
+      ],
+      chips:['Standup besok jam 09.30','1-on-1 besok sore','Review sprint Jumat jam 15.00']
+    },
+    wrk_staff:{
+      schedules:[mk(`Sinkronisasi pagi & cek prioritas${sfx}`,0,'09:00',true),mk('Fokus pengerjaan tugas utama',0,'13:30'),mk('Kirim update progres harian',0,'16:45')],
+      todos:[{id:uid(),text:'Balas email koordinasi yang tertunda',done:false,sample:true},{id:uid(),text:'Rapikan dokumentasi hasil kerja',done:false,sample:true}],
+      notes:[
+        {id:uid(),folder:'tugas',title:`Daftar Tugas Kerja${sfx}`,updatedAt:today(),body:'Target kerja hari ini:\n- Selesaikan deliverables prioritas pertama\n- Catat tindak lanjut hasil diskusi'},
+        {id:uid(),folder:'harian',title:'Catatan Sehari-hari',updatedAt:today(),body:'Catatan harian:\n- Olahraga ringan sepulang kerja.'}
+      ],
+      chips:['Rapat tim besok jam 10.00','Kirim laporan sore ini','Follow-up rekan besok pagi']
+    }
+  };
+  if(map[subroleId])return map[subroleId];
+  const r=ROLE_CATALOG[roleId]||ROLE_CATALOG.mahasiswa;
+  return {
+    schedules:r.lpSchedules.map((x,i)=>mk(x.title+sfx,0,x.time,i===0)),
+    todos:r.lpTodos.map(t=>({id:uid(),text:t,done:false,sample:true})),
+    notes:[
+      {id:uid(),folder:'tugas',title:`Catatan Tugas (${r.label})${sfx}`,updatedAt:today(),body:'Tulis daftar tugas dan tenggat penting di sini.\nKetik /todo di akhir baris untuk memindahkannya ke To-do.'},
+      {id:uid(),folder:'harian',title:'Catatan Sehari-hari',updatedAt:today(),body:'Tulis catatan harian, refleksi, atau ide santai di sini.'}
+    ],
+    chips:r.lpChips
+  };
+}
+
+/* ---------- Folder & File Catatan ---------- */
+const DEFAULT_FOLDERS=[
+  {id:'tugas',name:'Catatan Tugas'},
+  {id:'harian',name:'Sehari-hari'},
+  {id:'kerja',name:'Kuliah / Kerja'}
+];
+function ensureFolders(state){
+  if(!Array.isArray(state.folders)||!state.folders.length)state.folders=DEFAULT_FOLDERS.map(f=>({...f}));
+  (state.notes||[]).forEach(n=>{
+    if(!n.folder)n.folder='harian';
+    if(!n.updatedAt)n.updatedAt=today();
+  });
+  return state;
+}
+function getFolderName(folderId){
+  const f=(S.folders||DEFAULT_FOLDERS).find(x=>x.id===folderId);
+  return f?f.name:'Sehari-hari';
+}
+
+/* ---------- Akun & Penyimpanan Lokal ---------- */
+function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY))||[]}catch(e){return []}}
+function saveUsers(list){try{localStorage.setItem(USERS_KEY,JSON.stringify(list))}catch(e){}}
+function getSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY))}catch(e){return null}}
+function setSession(u){try{u?localStorage.setItem(SESSION_KEY,JSON.stringify(u)):localStorage.removeItem(SESSION_KEY)}catch(e){}}
+const userStorageKey=email=>`${KEY}_${email.toLowerCase().trim()}`;
+
+function defaultState(profile=null){
+  if(profile){
+    const tpl=buildTemplateForProfile(profile.roleId,profile.subroleId,profile.focusField);
+    return ensureFolders({schedules:tpl.schedules,todos:tpl.todos,folders:DEFAULT_FOLDERS.map(f=>({...f})),notes:tpl.notes,checkins:[today()],chips:tpl.chips,theme:null});
+  }
+  const mk=(title,offset,time,done=false)=>({id:uid(),title,date:iso(addDays(offset)),time,done,doneAt:done?iso(addDays(offset)):null,fired:true,sample:true});
+  return ensureFolders({
+    schedules:[mk('Susun rencana mingguan',0,'09:00',true),mk('Review agenda tim',0,'16:00'),mk('Finalisasi proyek',1,'20:30')],
+    todos:[{id:uid(),text:'Istirahat sebentar setelah satu sesi',done:false,sample:true}],
+    folders:DEFAULT_FOLDERS.map(f=>({...f})),
+    notes:[
+      {id:uid(),folder:'tugas',title:'Daftar Tugas Minggu Ini',updatedAt:today(),body:'Tulis daftar tugas penting di sini.'},
+      {id:uid(),folder:'harian',title:'Catatan Sehari-hari',updatedAt:today(),body:'Tulis jurnal harian atau catatan pribadi di sini.'}
+    ],
+    checkins:[],chips:['Rapat tim besok jam 14.00','Belajar malam ini','Olahraga besok pagi'],theme:null
+  });
+}
+
+let currentUser=getSession();
+let S=defaultState();
+function loadUserData(user){
+  if(!user)return defaultState();
+  const k=userStorageKey(user.email);
+  try{
+    const raw=JSON.parse(localStorage.getItem(k));
+    if(raw&&Array.isArray(raw.schedules))return ensureFolders({...defaultState(user.profile),...raw});
+  }catch(e){}
+  try{
+    const old=JSON.parse(localStorage.getItem(OLD_KEY));
+    if(old&&Array.isArray(old.schedules)&&!user.profile)return ensureFolders({...defaultState(),...old});
+  }catch(e){}
+  const fresh=defaultState(user.profile);
+  try{localStorage.setItem(k,JSON.stringify(fresh))}catch(e){}
+  return fresh;
+}
+if(currentUser)S=loadUserData(currentUser);
+
+const ui={
+  screen:currentUser?(currentUser.profile?'app':'onboarding'):'landing',
+  lpRole:'mahasiswa',authMode:'login',onbStep:1,onbRole:'mahasiswa',onbSubrole:'mhs_s1',onbFocus:'',
+  page:'today',mode:'list',month:new Date(),pick:today(),note:null,noteFolder:'all',day:today(),
+  wMonth:new Date(),wPick:today(),calPopOpen:false
+};
+
+let storageWarned=false;
+function save(){
+  if(!currentUser)return;
+  try{localStorage.setItem(userStorageKey(currentUser.email),JSON.stringify(S))}
+  catch(e){if(!storageWarned){storageWarned=true;toast('Penyimpanan browser tidak tersedia.')}}
+}
+function commit(){save();render()}
+
+function toast(msg,undo){
+  const el=document.createElement('div');el.className='toast';
+  el.innerHTML=`<span>${esc(msg)}</span>`;
+  if(undo){const b=document.createElement('button');b.textContent='Urungkan';b.onclick=()=>{undo();commit();el.remove()};el.append(b)}
+  $('#toasts').replaceChildren(el);
+  setTimeout(()=>el.remove(),undo?7000:4000);
+}
+function removeFrom(list,id,label){
+  const i=S[list].findIndex(x=>x.id===id);if(i<0)return;
+  const [gone]=S[list].splice(i,1);commit();
+  toast(`${label} dihapus.`,()=>S[list].splice(i,0,gone));
+}
+
+/* ---------- Welcome / Loading Screen ---------- */
+let welcomeTimer=null,welcomeCb=null;
+function hideWelcome(){
+  const ov=$('#welcomeOverlay');
+  if(!ov||ov.hidden)return;
+  clearTimeout(welcomeTimer);
+  ov.classList.add('leaving');
+  setTimeout(()=>{
+    ov.hidden=true;ov.classList.remove('leaving');
+    if(typeof welcomeCb==='function'){const fn=welcomeCb;welcomeCb=null;fn()}
+  },420);
+}
+function playWelcome({headline,subtext,duration=2000,onDone=null}={}){
+  const ov=$('#welcomeOverlay'),tEl=$('#welcomeTitle'),sEl=$('#welcomeSub'),bEl=$('#welcomeBar');
+  if(!ov)return onDone?.();
+  clearTimeout(welcomeTimer);
+  welcomeCb=onDone;
+  const svg=ov.querySelector('.u-logo');
+  if(svg){const c=svg.cloneNode(true);svg.replaceWith(c)}
+  const words=(headline||'Hi u, welcome home').split(/\s+/);
+  tEl.innerHTML=words.map((w,i)=>`<span class="welcome-word" style="animation-delay:${(0.1+i*0.09).toFixed(2)}s">${esc(w)}</span>`).join('');
+  sEl.textContent=subtext||'Menyiapkan ritme harianmu hari ini...';
+  bEl.style.transition='none';bEl.style.width='0%';
+  ov.classList.remove('leaving');ov.hidden=false;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    bEl.style.transition=`width ${Math.max(800,duration-200)}ms cubic-bezier(.22,1,.36,1)`;
+    bEl.style.width='100%';
+  }));
+  welcomeTimer=setTimeout(hideWelcome,duration);
+}
+
+/* ---------- Render Landing, Auth & Onboarding ---------- */
+function renderLanding(){
+  document.querySelectorAll('#landingScreen [role="tab"]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.id===ui.lpRole)));
+  const r=ROLE_CATALOG[ui.lpRole]||ROLE_CATALOG.mahasiswa;
+  $('#lpShowcase').innerHTML=`
+    <div class="cols" style="margin-top:8px">
+      <div class="panel">
+        <span class="tag">${esc(r.label)}</span>
+        <h3 style="font-size:22px;margin:10px 0 8px">${esc(r.lpTitle)}</h3>
+        <p class="muted">${esc(r.lpDesc)}</p>
+        <div style="margin:14px 0;display:grid;gap:6px">
+          ${r.lpPoints.map(p=>`<div class="small">✓ ${esc(p)}</div>`).join('')}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">
+          <button class="btn primary" data-act="startWithRole" data-id="${r.id}">Gunakan Templat ${esc(r.label)}</button>
+          <button class="btn ghost" data-act="quickDemoRole" data-id="${r.id}">Simulasikan</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 style="margin-bottom:8px">Pratinjau Jadwal &amp; To-do (${esc(r.label)})</h3>
+        ${r.lpSchedules.map(s=>`<div class="item"><span class="time">${esc(s.time)}</span><span class="grow">${esc(s.title)}</span></div>`).join('')}
+        <div class="group">To-do prioritas</div>
+        ${r.lpTodos.map(t=>`<div class="item"><span class="small">☐</span><span class="grow small">${esc(t)}</span></div>`).join('')}
+      </div>
+    </div>`;
+}
+function renderAuth(){
+  const isSignup=ui.authMode==='signup';
+  $('#authHeading').textContent=isSignup?'Daftar Akun UApps':'Masuk ke UApps';
+  $('#authSub').textContent=isSignup?'Buat akun gratis, lalu pilih statusmu untuk mendapatkan templat otomatis.':'Lanjutkan jadwal, catatan, dan progres harianmu.';
+  $('#nameFieldWrap').hidden=!isSignup;
+  $('#authName').required=isSignup;
+  $('#authSubmitBtn').textContent=isSignup?'Lanjut Pilih Status →':'Masuk';
+  document.querySelectorAll('#authScreen [role="tab"]').forEach(t=>t.setAttribute('aria-pressed',String(t.dataset.id===ui.authMode)));
+}
+function renderOnboarding(){
+  const card=$('#onbCard');
+  const role=ROLE_CATALOG[ui.onbRole]||ROLE_CATALOG.mahasiswa;
+  if(!role.subroles.some(s=>s.id===ui.onbSubrole))ui.onbSubrole=role.subroles[0].id;
+  const subrole=role.subroles.find(s=>s.id===ui.onbSubrole)||role.subroles[0];
+
+  if(ui.onbStep===1){
+    card.innerHTML=`
+      <span class="tag">Langkah 1 dari 2</span>
+      <h1 style="font-size:28px;margin:10px 0 6px">Halo ${esc(currentUser?.name||'Teman')}, apa statusmu saat ini?</h1>
+      <p class="muted">UApps akan menyesuaikan templat jadwal, pengingat tugas, dan folder catatan sesuai kebutuhanmu.</p>
+      <div class="choice-grid">
+        ${Object.values(ROLE_CATALOG).map(r=>`
+          <button type="button" class="choice" data-act="pickOnbRole" data-id="${r.id}" aria-pressed="${ui.onbRole===r.id}">
+            <strong>${esc(r.label)}</strong>
+            <span class="small muted">${esc(r.desc)}</span>
+          </button>`).join('')}
+      </div>
+      <div class="actions" style="justify-content:space-between">
+        <button type="button" class="btn ghost" data-act="logout">Keluar</button>
+        <button type="button" class="btn primary" data-act="onbNext">Lanjut Pilih Jabatan →</button>
+      </div>`;
+  } else {
+    const preview=buildTemplateForProfile(role.id,subrole.id,ui.onbFocus);
+    const lbl=role.id==='mahasiswa'?'Jurusan / Topik Skripsi (Opsional)':role.id==='pekerja'?'Divisi / Bidang Kerja (Opsional)':'Bidang Fokus (Opsional)';
+    card.innerHTML=`
+      <span class="tag">Langkah 2 dari 2 • ${esc(role.label)}</span>
+      <h1 style="font-size:26px;margin:10px 0 6px">Pilih jabatan atau fokus spesifikmu</h1>
+      <p class="muted">Kami akan menyiapkan contoh jadwal dan folder catatan yang langsung relevan.</p>
+      <div class="choice-grid">
+        ${role.subroles.map(sr=>`
+          <button type="button" class="choice" data-act="pickOnbSubrole" data-id="${sr.id}" aria-pressed="${ui.onbSubrole===sr.id}">
+            <strong>${esc(sr.label)}</strong>
+            <span class="small muted">${esc(sr.desc)}</span>
+          </button>`).join('')}
+      </div>
+      <label style="display:grid;gap:4px;font-size:13px;font-weight:600;margin-bottom:14px">${lbl}
+        <input class="field" id="onbFocusInp" value="${esc(ui.onbFocus)}" placeholder="Contoh: Informatika / Product Team">
+      </label>
+      <div style="background:var(--bg);padding:12px 14px;border-radius:12px;margin-bottom:14px">
+        <div class="small" style="font-weight:700">Templat yang akan disiapkan:</div>
+        <div class="small muted">• ${preview.schedules.length} jadwal awal (${esc(preview.schedules[0].title)}, dll.)</div>
+        <div class="small muted">• Folder "Catatan Tugas" dan "Sehari-hari"</div>
+      </div>
+      <div class="actions" style="justify-content:space-between">
+        <button type="button" class="btn ghost" data-act="onbPrev">← Kembali</button>
+        <button type="button" class="btn primary" data-act="finishOnboarding">Terapkan &amp; Masuk</button>
+      </div>`;
+    $('#onbFocusInp')?.addEventListener('input',e=>{ui.onbFocus=e.target.value});
+  }
+}
+
+/* ---------- Input Cepat Bahasa Indonesia ---------- */
+function parseQuick(raw){
+  let text=' '+raw+' ',date=null,time=null,m;
+  const take=re=>{const r=text.match(re);if(r)text=text.replace(r[0],' ');return r};
+  if(take(/\sbesok(?=\s)/i))date=addDays(1);
+  else if(take(/\slusa(?=\s)/i))date=addDays(2);
+  else if(take(/\shari ini(?=\s)/i))date=new Date();
+  else if(take(/\sminggu depan(?=\s)/i))date=addDays(7);
+  else if((m=take(/\s(?:hari\s+)?(senin|selasa|rabu|kamis|jumat|jum'at|sabtu)(?=\s)|\shari\s+(minggu)(?=\s)/i))){
+    const name=(m[1]||m[2]).toLowerCase().replace("'",'');
+    const target=['minggu','senin','selasa','rabu','kamis','jumat','sabtu'].indexOf(name);
+    date=addDays((target-new Date().getDay()+7)%7||7);
+  }else if((m=text.match(/\s(?:tgl|tanggal)\s+(\d{1,2})(?=\s)/i))){
+    const n=new Date(),day=+m[1];
+    let d=new Date(n.getFullYear(),n.getMonth(),day);
+    if(iso(d)<today())d=new Date(n.getFullYear(),n.getMonth()+1,day);
+    if(d.getDate()===day){date=d;text=text.replace(m[0],' ')}
+  }
+  m=text.match(/\s(?:(?:jam|pukul)\s*(\d{1,2})(?:[.:](\d{2}))?|(\d{1,2}):(\d{2}))(?:\s+(pagi|siang|sore|malam))?(?=\s)/i);
+  if(m){
+    let h=+(m[1]??m[3]);const min=+(m[2]??m[4]??0);
+    const part=(m[5]||(text.match(/\b(sore|malam)\b/i)||[])[1]||'').toLowerCase();
+    if(h<=23&&min<=59){
+      if((part==='sore'||part==='malam')&&h<12)h+=12;
+      if(part==='siang'&&h<6)h+=12;
+      if(part==='malam'&&h===12)h=0;
+      time=`${pad(h)}:${pad(min)}`;text=text.replace(m[0],' ');
+    }
+  }else if((m=take(/\s(pagi|siang|sore|malam)(?=\s*$)/i))){
+    time={pagi:'09:00',siang:'13:00',sore:'16:00',malam:'19:00'}[m[1].toLowerCase()];
+  }
+  const now=new Date();
+  if(!time){const n=new Date(now.getTime()+3600000);time=date&&iso(date)!==today()?'09:00':`${pad(n.getHours())}:00`;if(!date)date=n}
+  if(!date){date=new Date();if(new Date(`${iso(date)}T${time}`)<now)date=addDays(1)}
+  return {title:text.replace(/\s+/g,' ').trim(),date:iso(date),time};
+}
+function addSchedule(data){
+  const item={id:uid(),done:false,doneAt:null,...data};
+  item.fired=at(item)<new Date();
+  S.schedules.push(item);commit();
+  toast(`Tersimpan: ${niceDate(item.date)} pukul ${item.time}.`,()=>S.schedules=S.schedules.filter(x=>x.id!==item.id));
+}
+
+/* ---------- Navigasi & Widget Kalender ---------- */
+const PAGES=[
+  ['today','Hari ini','<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>'],
+  ['plan','Jadwal','<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/>'],
+  ['stats','Progres','<path d="M5 20v-7M12 20V4M19 20v-11"/>'],
+  ['notes','Catatan','<path d="M6 3h9l4 4v14H6zM9 12h7M9 16h5"/>']
+];
+function profileLabel(){
+  const p=currentUser?.profile;
+  return p?`${p.roleLabel} • ${p.subroleLabel.split('(')[0].trim()}`:'Pengguna Umum';
+}
+function renderNav(){
+  $('#nav').innerHTML=`<div class="brand display brand-mark">${logoSVG('u-logo')} <span>UApps</span></div>`+
+    PAGES.map(([id,label,icon])=>`<button class="nav-btn" data-act="go" data-id="${id}" ${ui.page===id?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>${label}</button>`).join('')+
+    `<div class="nav-foot">
+      <div class="user-pill"><strong>${esc(currentUser?.name||'Pengguna')}</strong><span>${esc(profileLabel())}</span></div>
+      <button class="nav-btn" data-act="changeRole">Ganti peran</button>
+      <button class="nav-btn" data-act="breaker">Pecah tugas</button>
+      <button class="nav-btn" data-act="theme">Ganti tema</button>
+      <button class="nav-btn" style="color:var(--late)" data-act="logout">Keluar</button>
+    </div>`;
+  const late=S.schedules.filter(isLate).length;
+  const search=document.querySelector('#appScreen [data-act="search"]');
+  if(search)search.innerHTML='⌕'+(late?`<span class="badge" title="${late} jadwal terlewat">${late}</span>`:'');
+  $('#calWidgetBtn')?.setAttribute('aria-expanded',String(!!ui.calPopOpen));
+  const pop=$('#calPopover');
+  if(pop){pop.hidden=!ui.calPopOpen;if(ui.calPopOpen)pop.innerHTML=miniCalendarHTML(true)}
+  const chips=S.chips||ROLE_CATALOG[currentUser?.profile?.roleId||'mahasiswa'].lpChips;
+  $('#quickChips').innerHTML=chips.map(c=>`<button type="button" class="chip" data-act="fillQuick" data-id="${esc(c)}">+ ${esc(c)}</button>`).join('');
+}
+
+function miniCalendarHTML(floating=false){
+  const base=ui.wMonth||new Date(),y=base.getFullYear(),m=base.getMonth();
+  const lead=(new Date(y,m,1).getDay()+6)%7,total=new Date(y,m+1,0).getDate(),sel=ui.wPick||today();
+  let cells=['Sen','Sel','Rab','Kam','Jum','Sab','Min'].map(d=>`<span class="wcal-dow">${d}</span>`).join('')+'<div></div>'.repeat(lead);
+  for(let d=1;d<=total;d++){
+    const k=iso(new Date(y,m,d)),evs=S.schedules.filter(s=>s.date===k);
+    const dots=evs.slice(0,3).map(e=>`<i class="${e.done?'done':isLate(e)?'late':''}"></i>`).join('');
+    cells+=`<button type="button" class="wcal-day ${k===today()?'today':''}" data-act="wPick" data-id="${k}" aria-pressed="${k===sel}" aria-label="${d}, ${evs.length} jadwal"><span>${d}</span><span class="wcal-dots" aria-hidden="true">${dots}</span></button>`;
+  }
+  const list=S.schedules.filter(s=>s.date===sel).sort(byTime);
+  const items=list.length
+    ? list.slice(0,3).map(s=>`<button type="button" class="wcal-row" data-act="editFromWidget" data-id="${esc(s.id)}"><b>${esc(s.time)}</b><span class="grow ${s.done?'done-text':''}">${esc(s.title)}</span></button>`).join('')
+      +(list.length>3?`<div class="small muted" style="padding:2px 8px">+${list.length-3} jadwal lainnya</div>`:'')
+    : `<p class="small muted" style="padding:4px 0">Tidak ada jadwal di tanggal ini.</p>`;
+  return `
+    <div class="wcal-head">
+      ${floating?'<h3>':'<h2>'}${fmt(base,{month:'long',year:'numeric'})}${floating?'</h3>':'</h2>'}
+      <button type="button" class="icon" data-act="wMonth" data-id="-1" aria-label="Bulan sebelumnya">‹</button>
+      <button type="button" class="btn text small" data-act="wMonth" data-id="0">Hari ini</button>
+      <button type="button" class="icon" data-act="wMonth" data-id="1" aria-label="Bulan berikutnya">›</button>
+      ${floating?`<button type="button" class="icon" data-act="closeCalWidget" aria-label="Tutup">✕</button>`:''}
+    </div>
+    <div class="wcal-grid">${cells}</div>
+    <div class="wcal-sub">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <strong class="small">${esc(niceDate(sel))}</strong>
+        <button type="button" class="btn text small" data-act="newFromWidget" data-id="${sel}">+ Tambah</button>
+      </div>
+      ${items}
+      <div style="text-align:right;margin-top:4px"><button type="button" class="btn text small" data-act="openFullCalendar" data-id="${sel}">Buka kalender penuh →</button></div>
+    </div>`;
+}
+
+/* ---------- Halaman Utama: Hari Ini ---------- */
+function row(s,showDate){
+  const late=isLate(s);
+  return `<div class="item">
+    <button class="check" data-act="toggle" data-id="${esc(s.id)}" aria-pressed="${s.done}" aria-label="Tandai selesai: ${esc(s.title)}">✓</button>
+    <span class="time">${esc(s.time)}</span>
+    <button class="grow" data-act="edit" data-id="${esc(s.id)}"><span class="${s.done?'done-text':''}">${esc(s.title)}</span>
+      ${showDate||late?`<br><span class="small ${late?'late-text':'muted'}">${late?'Terlewat, ':''}${late?niceDate(s.date).toLowerCase():niceDate(s.date)}</span>`:''}</button>
+    ${s.done?'':`<button class="icon" data-act="focus" data-id="${esc(s.id)}" aria-label="Mulai fokus 25 menit" title="Fokus 25 menit">▶</button>`}
+    <button class="icon" data-act="del" data-id="${esc(s.id)}" aria-label="Hapus ${esc(s.title)}" title="Hapus">✕</button>
+  </div>`;
+}
+function skyHTML(){
+  const n=new Date(),pct=(n.getHours()*60+n.getMinutes())/14.4,h=n.getHours()+n.getMinutes()/60;
+  const day=h>=6&&h<18,t=day?(h-6)/12:((h+6)%24)/12;
+  const pins=S.schedules.filter(s=>s.date===today()).map(s=>{
+    const [a,b]=s.time.split(':').map(Number);
+    return `<button class="pin ${s.done?'done':isLate(s)?'late':''}" style="left:clamp(14px,${(a*60+b)/14.4}%,calc(100% - 14px))" data-act="edit" data-id="${esc(s.id)}" title="${esc(s.time+' '+s.title)}" aria-label="${esc(s.time+' '+s.title)}"></button>`}).join('');
+  return `<div class="past" style="width:${pct}%"></div><div class="ground"></div>
+    <div class="now" style="left:${pct}%"></div>
+    <div class="orb ${day?'':'moon'}" style="left:clamp(24px,${pct}%,calc(100% - 24px));top:${100-Math.sin(t*Math.PI)*65}px"></div>
+    ${[3,6,9,12,15,18,21].map(x=>`<span class="hour" style="left:${x/.24}%">${pad(x)}.00</span>`).join('')}${pins}`;
+}
+function streak(){
+  const set=new Set(S.checkins);let d=set.has(today())?new Date():addDays(-1),n=0;
+  while(set.has(iso(d))){n++;d=addDays(-1,d)}return n;
+}
+function viewToday(){
+  const late=S.schedules.filter(isLate).sort(byTime);
+  const mine=S.schedules.filter(s=>s.date===today()&&!isLate(s)).sort(byTime);
+  const next=S.schedules.filter(s=>!s.done&&at(s)>=new Date()).sort(byTime)[0];
+  const h=new Date().getHours(),greet=h<11?'Selamat pagi':h<15?'Selamat siang':h<18?'Selamat sore':'Selamat malam';
+  const firstName=(currentUser?.name||'').split(' ')[0];
+  let sub='Belum ada agenda berikutnya. Tambahkan lewat kotak di atas.';
+  if(next){const m=Math.ceil((at(next)-new Date())/60000);
+    const when=m<60?`${m} menit lagi`:m<1440?`${Math.floor(m/60)} jam ${m%60} menit lagi`:`${niceDate(next.date).toLowerCase()} pukul ${next.time}`;
+    sub=`Berikutnya: <b>${esc(next.title)}</b>, ${when}.`}
+  const checked=S.checkins.includes(today());
+  const hasSample=[...S.schedules,...S.todos].some(x=>x.sample);
+  return `
+  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+    <h1>${greet}${firstName?`, ${esc(firstName)}`:''}</h1>
+    <button class="tag" data-act="changeRole" title="Ubah status &amp; templat">${esc(profileLabel())}</button>
+  </div>
+  <p class="muted" id="nextLine">${sub}</p>
+
+  <!-- Baris Teratas: Streak & To-do Sejajar agar langsung terlihat -->
+  <div class="top-cards">
+    <section class="panel">
+      <div>
+        <h2>${streak()} hari beruntun</h2>
+        <div class="days">${[-6,-5,-4,-3,-2,-1,0].map(i=>{const d=addDays(i);return `<div class="day"><div class="dot ${S.checkins.includes(iso(d))?'on':''}"></div>${fmt(d,{weekday:'narrow'})}</div>`}).join('')}</div>
+      </div>
+      <button class="btn ${checked?'ghost':'primary'}" style="width:100%;margin-top:14px" data-act="checkin" aria-pressed="${checked}">${checked?'Batalkan check-in':'Check-in hari ini'}</button>
+    </section>
+
+    <section class="panel">
+      <div>
+        <h2>To-do</h2>
+        ${S.todos.map(t=>`<div class="item"><button class="check" data-act="todo" data-id="${esc(t.id)}" aria-pressed="${t.done}" aria-label="Centang: ${esc(t.text)}">✓</button>
+          <span class="grow ${t.done?'done-text':''}">${esc(t.text)}</span><button class="icon" data-act="delTodo" data-id="${esc(t.id)}" aria-label="Hapus to-do">✕</button></div>`).join('')||'<p class="empty" style="padding:10px 0">Tulis satu hal kecil untuk dimulai.</p>'}
+      </div>
+      <div>
+        <form class="inline" data-form="todo"><input class="field" id="todoInp" name="text" placeholder="To-do baru" aria-label="To-do baru" required><button class="btn ghost">Tambah</button></form>
+        <button class="btn text" data-act="breaker">Pecah tugas besar</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Elemen Khas: Langit Satu Hari -->
+  <div class="sky" id="sky">${skyHTML()}</div>
+  <p class="small muted">${fmt(new Date(),{weekday:'long',day:'numeric',month:'long',year:'numeric'})}. Ketuk penanda di langit untuk mengubah jadwal.
+  ${hasSample?'<button class="btn text" data-act="clearSample">Hapus data contoh</button>':''}</p>
+
+  <!-- Kolom Bawah: Agenda & Widget Kalender + Pintasan File Catatan -->
+  <div class="cols"><div>
+    ${late.length?`<section class="panel"><h2>Perlu dibereskan</h2>${late.map(s=>row(s,true)).join('')}
+      <button class="btn text" data-act="moveLate">Pindahkan semua ke besok</button></section>`:''}
+    <section class="panel"><h2>Agenda hari ini</h2>${mine.map(s=>row(s)).join('')||'<p class="empty">Hari ini masih lapang.</p>'}</section>
+    <section class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h2 style="margin:0">File catatan</h2>
+        <button class="btn text small" data-act="goNotesFolder" data-id="all">Semua (${S.notes.length}) →</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+        <button class="btn ghost sm" data-act="newNoteInFolder" data-id="tugas">+ Catatan Tugas</button>
+        <button class="btn ghost sm" data-act="newNoteInFolder" data-id="harian">+ Sehari-hari</button>
+      </div>
+      ${S.notes.slice(0,3).map(n=>`<div class="item">
+        <span class="tag">${esc(getFolderName(n.folder))}</span>
+        <button class="grow" data-act="jumpToNote" data-id="${esc(n.id)}">${esc(n.title||'Tanpa judul')}</button>
+        <span class="small muted">${esc(niceDate(n.updatedAt||today()))}</span>
+      </div>`).join('')||'<p class="empty" style="padding:8px 0">Belum ada file catatan.</p>'}
+    </section>
+  </div><div>
+    <section class="panel">${miniCalendarHTML(false)}</section>
+  </div></div>`;
+}
+
+/* ---------- Halaman Jadwal & Progres ---------- */
+function viewPlan(){
+  let body;
+  if(ui.mode==='list'){
+    const groups={};
+    S.schedules.filter(s=>!s.done).sort(byTime).forEach(s=>(groups[isLate(s)?'Terlewat':niceDate(s.date)]??=[]).push(s));
+    const done=S.schedules.filter(s=>s.done).sort(byTime).reverse();
+    body=`<section class="panel">${Object.entries(groups).map(([g,l])=>`<h3 class="group">${g}</h3>${l.map(s=>row(s)).join('')}`).join('')||'<p class="empty">Tidak ada jadwal aktif. Tambahkan lewat kotak di atas.</p>'}
+      ${done.length?`<details style="margin-top:16px" ${ui.showDone?'open':''} id="doneBox"><summary>Selesai (${done.length})</summary>${done.map(s=>row(s,true)).join('')}</details>`:''}</section>`;
+  }else{
+    const y=ui.month.getFullYear(),m=ui.month.getMonth();
+    const lead=(new Date(y,m,1).getDay()+6)%7,total=new Date(y,m+1,0).getDate();
+    let cells=['Sen','Sel','Rab','Kam','Jum','Sab','Min'].map(d=>`<span>${d}</span>`).join('')+'<div></div>'.repeat(lead);
+    for(let d=1;d<=total;d++){const k=iso(new Date(y,m,d)),ev=S.schedules.filter(s=>s.date===k).sort(byTime);
+      cells+=`<button class="cell ${k===today()?'today':''}" data-act="pick" data-id="${k}" aria-pressed="${k===ui.pick}" aria-label="${d}, ${ev.length} jadwal"><b>${d}</b>${ev.slice(0,2).map(e=>`<div class="ev">${esc(e.title)}</div>`).join('')}${ev.length>2?`<small class="muted">+${ev.length-2}</small>`:''}</button>`}
+    const sel=S.schedules.filter(s=>s.date===ui.pick).sort(byTime);
+    body=`<section class="panel"><div class="cal-head"><h2>${fmt(ui.month,{month:'long',year:'numeric'})}</h2>
+      <button class="icon" data-act="month" data-id="-1" aria-label="Bulan sebelumnya">‹</button><button class="btn text" data-act="month" data-id="0">Hari ini</button><button class="icon" data-act="month" data-id="1" aria-label="Bulan berikutnya">›</button></div>
+      <div class="cal">${cells}</div></section>
+      <section class="panel" style="margin-top:16px"><h2>${niceDate(ui.pick)}</h2>${sel.map(s=>row(s)).join('')||'<p class="empty">Belum ada jadwal di tanggal ini.</p>'}
+      <button class="btn ghost" data-act="new" data-id="${ui.pick}">Tambah di tanggal ini</button></section>`;
+  }
+  return `<h1>Jadwal</h1><div class="seg"><button data-act="mode" data-id="list" aria-pressed="${ui.mode==='list'}">Daftar</button><button data-act="mode" data-id="month" aria-pressed="${ui.mode==='month'}">Bulan</button></div>
+    <button class="btn ghost" data-act="new" data-id="${today()}" style="float:right;margin-top:16px">Jadwal baru</button><div style="clear:both">${body}</div>`;
+}
+function viewStats(){
+  const days=[-6,-5,-4,-3,-2,-1,0].map(i=>{const d=addDays(i),l=S.schedules.filter(s=>s.date===iso(d));return {d,total:l.length,done:l.filter(s=>s.done).length}});
+  const max=Math.max(1,...days.map(x=>x.total));
+  const month=S.schedules.filter(s=>s.date.startsWith(today().slice(0,7)));
+  const done=month.filter(s=>s.done).sort(byTime).reverse();
+  const head=!month.length?'Bulan ini masih kosong':`${done.length} dari ${month.length} jadwal bulan ini selesai`;
+  return `<h1>${head}</h1><p class="muted">Check-in beruntun: ${streak()} hari.</p>
+  <section class="panel" style="margin:20px 0"><h2>7 hari terakhir</h2><div class="bars">${days.map(x=>`<div class="bar"><span>${x.done}/${x.total}</span>
+    <div class="stack" style="height:${x.total/max*75}%"><div class="fill" style="height:${x.total?x.done/x.total*100:0}%"></div></div>${fmt(x.d,{weekday:'short'})}</div>`).join('')}</div>
+    <p class="small muted" style="margin-top:10px">Tinggi batang menunjukkan jumlah jadwal, bagian hijau yang sudah selesai.</p></section>
+  <section class="panel"><h2>Sudah dikerjakan bulan ini</h2>${done.map(s=>row(s,true)).join('')||'<p class="empty">Centang satu jadwal untuk mulai mencatat progres.</p>'}</section>`;
+}
+
+/* ---------- Halaman Catatan dengan Folder & File ---------- */
+const CMDS=[['todo','Jadikan to-do'],['tanggal','Sisipkan tanggal'],['jadwal','Buat jadwal baru'],['pecah','Pecah tugas']];
+function curNote(){
+  ensureFolders(S);
+  if(!S.notes.length)S.notes.push({id:uid(),folder:'harian',title:'',updatedAt:today(),body:''});
+  const pool=ui.noteFolder==='all'?S.notes:S.notes.filter(n=>n.folder===ui.noteFolder);
+  if(pool.length&&!pool.some(n=>n.id===ui.note))ui.note=pool[0].id;
+  return S.notes.find(n=>n.id===ui.note)||pool[0]||S.notes[0];
+}
+function viewNotes(){
+  ensureFolders(S);
+  const folders=S.folders||DEFAULT_FOLDERS;
+  const filtered=ui.noteFolder==='all'?S.notes:S.notes.filter(n=>n.folder===ui.noteFolder);
+  const n=curNote();ui.note=n.id;
+  return `
+  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
+    <div><h1>Catatan</h1><p class="small muted">Pisahkan file catatan tugas dan catatan sehari-hari ke dalam folder.</p></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button class="btn ghost sm" data-act="newFolder">+ Folder baru</button>
+      <button class="btn ghost sm" data-act="importNoteFile">Impor .txt/.md</button>
+      <button class="btn primary sm" data-act="newNote">+ File baru</button>
+    </div>
+  </div>
+  <input type="file" id="noteFileImp" accept=".txt,.md,text/plain,text/markdown" hidden>
+
+  <div class="notes">
+    <div>
+      <div class="folder-pills" role="tablist" aria-label="Filter folder catatan">
+        <button class="fpill" data-act="filterNoteFolder" data-id="all" aria-pressed="${ui.noteFolder==='all'}">Semua (${S.notes.length})</button>
+        ${folders.map(f=>`<button class="fpill" data-act="filterNoteFolder" data-id="${esc(f.id)}" aria-pressed="${ui.noteFolder===f.id}">${esc(f.name)} (${S.notes.filter(x=>x.folder===f.id).length})</button>`).join('')}
+      </div>
+      <div class="note-list">
+        ${filtered.length?filtered.map(x=>`<button class="note-item" data-act="openNote" data-id="${esc(x.id)}" aria-current="${x.id===n.id}">
+          <span class="small muted">${esc(getFolderName(x.folder))}</span>
+          <span class="note-item-title">${esc(x.title||'Tanpa judul')}</span>
+        </button>`).join(''):`<p class="small muted" style="padding:8px 4px">Belum ada file di folder ini.</p>`}
+      </div>
+    </div>
+
+    <section class="panel editor">
+      <div class="editor-bar">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="small muted">Folder:</span>
+          <select class="field" id="noteFolderSel" style="width:auto;padding:5px 10px;font-size:13px" aria-label="Pilih folder file">
+            ${folders.map(f=>`<option value="${esc(f.id)}" ${f.id===n.folder?'selected':''}>${esc(f.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn ghost sm" data-act="exportNote" data-id="${esc(n.id)}">Unduh .md</button>
+          <button class="btn text small" data-act="delNote" data-id="${esc(n.id)}">Hapus file</button>
+        </div>
+      </div>
+      <input class="title-in" id="noteTitle" value="${esc(n.title)}" placeholder="Tanpa judul" aria-label="Judul catatan">
+      <textarea id="noteBody" placeholder="Mulai menulis. Ketik / untuk perintah (/todo, /jadwal, /tanggal, /pecah)." aria-label="Isi catatan">${esc(n.body)}</textarea>
+      <div class="slash" id="slash"></div>
+      <div class="actions" style="justify-content:space-between"><span class="small muted">Tersimpan otomatis di browser ini.</span><span class="small muted">Diperbarui ${esc(niceDate(n.updatedAt||today()))}</span></div>
+    </section>
+  </div>`;
+}
+
+function render(){
+  document.documentElement.dataset.theme=S.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  $('#landingScreen').hidden=ui.screen!=='landing';
+  $('#authScreen').hidden=ui.screen!=='auth';
+  $('#onboardingScreen').hidden=ui.screen!=='onboarding';
+  $('#appScreen').hidden=ui.screen!=='app';
+
+  if(ui.screen==='landing')return renderLanding();
+  if(ui.screen==='auth')return renderAuth();
+  if(ui.screen==='onboarding')return renderOnboarding();
+
+  const a=document.activeElement,keep=a&&a.closest&&a.closest('#view,#nav')?{id:a.id,act:a.dataset.act,key:a.dataset.id}:null;
+  renderNav();
+  $('#view').innerHTML={today:viewToday,plan:viewPlan,stats:viewStats,notes:viewNotes}[ui.page]();
+  if(ui.page==='notes')bindNotes();
+  $('#doneBox')?.addEventListener('toggle',e=>ui.showDone=e.target.open);
+  if(keep){
+    const el=keep.id?document.getElementById(keep.id):keep.act?document.querySelector(`[data-act="${keep.act}"]${keep.key?`[data-id="${CSS.escape(keep.key)}"]`:''}`):null;
+    el?.focus({preventScroll:true});
+  }
+}
+
+/* ---------- Menu "/" & Binding Catatan ---------- */
+function bindNotes(){
+  const body=$('#noteBody'),menu=$('#slash'),n=curNote();let list=[],sel=0;
+  const close=()=>{menu.classList.remove('open');list=[]};
+  const query=()=>body.value.slice(0,body.selectionStart).match(/(?:^|\s)\/(\w*)$/);
+  const draw=()=>{menu.innerHTML=list.map(([k,l],i)=>`<button class="opt ${i===sel?'sel':''}" data-cmd="${k}"><span>${l}</span><span class="muted">/${k}</span></button>`).join('');menu.classList.toggle('open',!!list.length)};
+  const run=cmd=>{
+    const q=query();if(!q)return;
+    const end=body.selectionStart,start=end-q[1].length-1;
+    const lineStart=body.value.lastIndexOf('\n',start-1)+1,line=body.value.slice(lineStart,start).trim();
+    body.setRangeText(cmd==='tanggal'?fmt(new Date(),{day:'numeric',month:'long',year:'numeric'}):'',start,end,'end');
+    n.body=body.value;n.updatedAt=today();close();save();
+    if(cmd==='todo'){
+      if(!line)return toast('Tulis teksnya dulu di baris itu, lalu ketik /todo.');
+      S.todos.push({id:uid(),text:line,done:false});save();toast('Ditambahkan ke To-do.');
+    }
+    if(cmd==='jadwal')openForm({title:line});
+    if(cmd==='pecah')openBreaker(line);
+  };
+  body.addEventListener('input',()=>{n.body=body.value;n.updatedAt=today();save();const q=query();list=q?CMDS.filter(c=>c[0].startsWith(q[1].toLowerCase())):[];sel=0;draw()});
+  body.addEventListener('keydown',e=>{
+    if(!list.length)return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();sel=(sel+(e.key==='ArrowDown'?1:-1)+list.length)%list.length;draw()}
+    else if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();run(list[sel][0])}
+    else if(e.key==='Escape'){e.preventDefault();close()}
+  });
+  menu.addEventListener('mousedown',e=>{e.preventDefault();const b=e.target.closest('[data-cmd]');if(b)run(b.dataset.cmd)});
+  body.addEventListener('blur',close);
+  $('#noteTitle').addEventListener('input',e=>{
+    n.title=e.target.value;n.updatedAt=today();save();
+    const t=document.querySelector('.note-item[aria-current="true"] .note-item-title');
+    if(t)t.textContent=n.title||'Tanpa judul';
+  });
+  $('#noteFolderSel')?.addEventListener('change',e=>{
+    n.folder=e.target.value;n.updatedAt=today();commit();
+    toast(`Dipindahkan ke folder "${getFolderName(n.folder)}".`);
+  });
+  $('#noteFileImp')?.addEventListener('change',e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const title=file.name.replace(/\.(txt|md|markdown)$/i,'');
+      const folder=ui.noteFolder==='all'?'tugas':ui.noteFolder;
+      const created={id:uid(),folder,title,updatedAt:today(),body:String(reader.result||'')};
+      S.notes.unshift(created);ui.note=created.id;commit();
+      toast(`File "${file.name}" diimpor.`);
+    };
+    reader.readAsText(file);
+  });
+}
+
+/* ---------- Dialog ---------- */
+const dlg=$('#dlg');
+function show(html){dlg.innerHTML=html;if(!dlg.open)dlg.showModal()}
+function openNewFolderModal(){
+  show(`<form class="form" data-form="newFolder"><h2 id="dlgTitle">Folder catatan baru</h2>
+    <label>Nama folder<input class="field" name="name" placeholder="Contoh: Tugas Kuliah / Proyek Klien" required autofocus></label>
+    <div class="actions"><button type="button" class="btn ghost" data-act="close">Batal</button><button class="btn primary">Buat folder</button></div></form>`);
+}
+function openForm(s={}){
+  show(`<form class="form" data-form="sched" data-id="${esc(s.id||'')}"><h2 id="dlgTitle">${s.id?'Ubah jadwal':'Jadwal baru'}</h2>
+    <label>Kegiatan<input class="field" name="title" value="${esc(s.title||'')}" required autofocus></label>
+    <div class="two"><label>Tanggal<input class="field" type="date" name="date" value="${esc(s.date||today())}" required></label>
+    <label>Jam alarm<input class="field" type="time" name="time" value="${esc(s.time||'19:00')}" required></label></div>
+    <p class="small muted">Alarm hanya berbunyi selama halaman ini terbuka.</p>
+    <div class="actions"><button type="button" class="btn ghost" data-act="close">Batal</button><button class="btn primary">Simpan jadwal</button></div></form>`);
+}
+function openBreaker(text=''){
+  show(`<form class="form" data-form="break"><h2 id="dlgTitle">Pecah tugas</h2>
+    <p class="small muted">Ubah langkah-langkah di bawah sebelum disimpan.</p>
+    <label>Tugas besar<input class="field" id="bigTask" name="task" value="${esc(text)}" placeholder="Siapkan materi presentasi" required autofocus></label>
+    <label>Langkah (satu per baris)<textarea class="field" name="steps" rows="5" required>Tentukan hasil akhirnya
+Kumpulkan bahan
+Kerjakan draf pertama
+Periksa ulang dan selesaikan</textarea></label>
+    <div class="actions"><button type="button" class="btn ghost" data-act="close">Batal</button><button class="btn primary">Tambahkan ke To-do</button></div></form>`);
+}
+function openProfileMenu(){
+  show(`<h2 id="dlgTitle">Profil</h2>
+    <p><strong>${esc(currentUser?.name||'Pengguna')}</strong><br><span class="small muted">${esc(profileLabel())}</span></p>
+    <div class="actions" style="justify-content:stretch;margin-top:16px">
+      <button class="btn ghost" style="width:100%" data-act="changeRole">Ganti peran &amp; templat</button>
+      <button class="btn ghost" style="width:100%;color:var(--late)" data-act="logout">Keluar</button>
+      <button class="btn text" style="width:100%" data-act="close">Tutup</button>
+    </div>`);
+}
+function openSearch(){
+  show(`<h2 id="dlgTitle">Cari</h2><input class="field" id="searchInp" placeholder="Jadwal, catatan, to-do, atau halaman" aria-label="Kata kunci" autofocus><div id="results"></div>`);
+  let hits=[],sel=0;const inp=$('#searchInp');
+  const go=h=>{dlg.close();h.run()};
+  const draw=()=>{$('#results').innerHTML=hits.map((h,i)=>`<button class="opt ${i===sel?'sel':''}" data-i="${i}"><span>${esc(h.label)}</span><span class="muted small">${esc(h.kind)}</span></button>`).join('')||'<p class="empty">Tidak ada hasil. Coba kata lain.</p>';$('#results .sel')?.scrollIntoView({block:'nearest'})};
+  const find=()=>{const q=inp.value.toLowerCase();
+    const page=p=>()=>{ui.page=p;render()};
+    hits=[...PAGES.map(p=>({label:p[1],kind:'Halaman',run:page(p[0])})),
+      ...S.schedules.map(s=>({label:s.title,kind:`${niceDate(s.date)}, ${s.time}`,text:s.title,run:()=>openForm(s)})),
+      ...S.notes.map(n=>({label:n.title||'Tanpa judul',kind:`Catatan • ${getFolderName(n.folder)}`,text:n.title+' '+n.body,run:()=>{ui.note=n.id;ui.noteFolder='all';page('notes')()}})),
+      ...S.todos.map(t=>({label:t.text,kind:'To-do',run:page('today')}))
+    ].filter(h=>(h.text||h.label).toLowerCase().includes(q)).slice(0,20);sel=0;draw()};
+  inp.addEventListener('input',find);
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(hits.length){sel=(sel+(e.key==='ArrowDown'?1:-1)+hits.length)%hits.length;draw()}}
+    if(e.key==='Enter'&&hits[sel]){e.preventDefault();go(hits[sel])}
+  });
+  $('#results').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b)go(hits[b.dataset.i])});
+  find();
+}
+
+/* ---------- Alarm dan Fokus ---------- */
+let audio;
+function beep(){
+  try{audio??=new AudioContext();audio.resume();
+    [0,.25,.5].forEach(t=>{const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=880;g.gain.setValueAtTime(.15,audio.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+t+.2);o.connect(g).connect(audio.destination);o.start(audio.currentTime+t);o.stop(audio.currentTime+t+.2)})}catch(e){}
+}
+function checkAlarm(){
+  if(ui.screen!=='app'||dlg.open)return;
+  const now=Date.now();
+  const s=S.schedules.find(x=>!x.done&&!x.fired&&(x.snooze||at(x).getTime())<=now);
+  if(!s)return;
+  s.fired=true;save();beep();render();
+  show(`<div style="text-align:center"><div class="ring" aria-hidden="true"></div><h2 id="dlgTitle">${esc(s.title)}</h2><p class="muted">Alarm pukul ${esc(s.time)}</p>
+    <div class="actions" style="justify-content:center;margin-top:16px"><button class="btn ghost" data-act="snooze" data-id="${esc(s.id)}">Tunda 10 menit</button>
+    <button class="btn ghost" data-act="close">Tutup</button><button class="btn primary" data-act="alarmDone" data-id="${esc(s.id)}">Sudah selesai</button></div></div>`);
+}
+let focus=null;
+function tickFocus(){
+  $('#focusbar').hidden=!focus;if(!focus)return;
+  const left=Math.max(0,Math.ceil((focus.end-Date.now())/1000));
+  $('#focusTime').textContent=`${pad(Math.floor(left/60))}:${pad(left%60)}`;$('#focusName').textContent=focus.title;
+  if(!left){beep();toast(`Sesi fokus selesai: ${focus.title}. Saatnya rehat 5 menit.`);focus=null;$('#focusbar').hidden=true}
+}
+
+/* ---------- Mode Demo ---------- */
+function startDemoWithRole(roleId='mahasiswa'){
+  const r=ROLE_CATALOG[roleId]||ROLE_CATALOG.mahasiswa,sr=r.subroles[0];
+  const demoUser={id:'demo_user',name:`Demo ${r.label}`,email:'demo@uapps.id',profile:{roleId:r.id,roleLabel:r.label,subroleId:sr.id,subroleLabel:sr.label,focusField:''}};
+  currentUser=demoUser;setSession(demoUser);
+  S=defaultState(demoUser.profile);save();
+  ui.screen='app';ui.page='today';render();
+  playWelcome({headline:`Hi ${r.label}, welcome home`,subtext:`Menyiapkan templat ${sr.label}...`,onDone:()=>toast(`Mode Demo (${r.label}) aktif.`)});
+}
+
+/* ---------- Aksi ---------- */
+const find=id=>S.schedules.find(s=>s.id===id);
+function setDone(s,v){s.done=v;s.doneAt=v?today():null}
+const ACT={
+  skipWelcome:hideWelcome,
+  lpTab:id=>{ui.lpRole=id;render()},
+  openAuth:mode=>{ui.authMode=mode||'login';ui.screen='auth';$('#authError').hidden=true;render()},
+  switchAuth:mode=>{ui.authMode=mode;$('#authError').hidden=true;render()},
+  backLanding:()=>{ui.screen='landing';render()},
+  startWithRole:roleId=>{ui.onbRole=roleId;ui.onbSubrole=(ROLE_CATALOG[roleId]||ROLE_CATALOG.mahasiswa).subroles[0].id;ui.authMode='signup';ui.screen='auth';$('#authError').hidden=true;render()},
+  quickDemo:()=>startDemoWithRole('mahasiswa'),
+  quickDemoRole:roleId=>startDemoWithRole(roleId),
+
+  pickOnbRole:id=>{ui.onbRole=id;ui.onbSubrole=(ROLE_CATALOG[id]||ROLE_CATALOG.mahasiswa).subroles[0].id;render()},
+  pickOnbSubrole:id=>{ui.onbSubrole=id;render()},
+  onbNext:()=>{ui.onbStep=2;render()},
+  onbPrev:()=>{ui.onbStep=1;render()},
+  finishOnboarding:()=>{
+    const r=ROLE_CATALOG[ui.onbRole]||ROLE_CATALOG.mahasiswa;
+    const sr=r.subroles.find(x=>x.id===ui.onbSubrole)||r.subroles[0];
+    const profile={roleId:r.id,roleLabel:r.label,subroleId:sr.id,subroleLabel:sr.label,focusField:(ui.onbFocus||'').trim()};
+    currentUser.profile=profile;setSession(currentUser);
+    const users=getUsers(),idx=users.findIndex(u=>u.email===currentUser.email);
+    if(idx>=0){users[idx].profile=profile;saveUsers(users)}
+    S=defaultState(profile);save();
+    ui.screen='app';ui.page='today';render();
+    const first=(currentUser.name||'u').split(' ')[0];
+    playWelcome({headline:`Hi ${first}, welcome home`,subtext:`Ruang UApps & templat ${sr.label} siap digunakan.`});
+  },
+  changeRole:()=>{
+    if(dlg.open)dlg.close();
+    const p=currentUser?.profile;
+    ui.onbRole=p?.roleId||'mahasiswa';ui.onbSubrole=p?.subroleId||'mhs_s1';ui.onbFocus=p?.focusField||'';ui.onbStep=1;ui.screen='onboarding';render();
+  },
+  logout:()=>{if(dlg.open)dlg.close();focus=null;setSession(null);currentUser=null;ui.screen='landing';render();toast('Kamu telah keluar.')},
+
+  go:id=>{ui.page=id;ui.calPopOpen=false;render();scrollTo(0,0)},
+  theme:()=>{S.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';if(currentUser)save();render()},
+  search:()=>{ui.calPopOpen=false;openSearch()},
+  openProfileMenu:()=>{ui.calPopOpen=false;openProfileMenu()},
+  breaker:()=>{ui.calPopOpen=false;openBreaker()},
+  close:()=>dlg.close(),
+  toggleCalWidget:()=>{ui.calPopOpen=!ui.calPopOpen;render()},
+  closeCalWidget:()=>{ui.calPopOpen=false;render()},
+  wMonth:n=>{const m=ui.wMonth||new Date();ui.wMonth=+n?new Date(m.getFullYear(),m.getMonth()+ +n,1):new Date();if(!+n)ui.wPick=today();render()},
+  wPick:id=>{ui.wPick=id;render()},
+  newFromWidget:date=>{ui.calPopOpen=false;render();openForm({date})},
+  editFromWidget:id=>{ui.calPopOpen=false;render();openForm(find(id))},
+  openFullCalendar:date=>{ui.calPopOpen=false;ui.pick=date||today();ui.month=new Date((date||today())+'T12:00');ui.mode='month';ui.page='plan';render();scrollTo(0,0)},
+  fillQuick:text=>{const inp=$('#quickInp');inp.value=text;updatePreview();inp.focus()},
+
+  toggle:id=>{const s=find(id);setDone(s,!s.done);commit();if(s.done)toast('Selesai. Satu beres!',()=>setDone(s,false))},
+  edit:id=>openForm(find(id)),
+  del:id=>removeFrom('schedules',id,'Jadwal'),
+  new:date=>openForm({date}),
+  focus:id=>{focus={title:find(id).title,end:Date.now()+25*60000};tickFocus()},
+  stopFocus:()=>{focus=null;tickFocus()},
+  todo:id=>{const t=S.todos.find(x=>x.id===id);t.done=!t.done;commit()},
+  delTodo:id=>removeFrom('todos',id,'To-do'),
+  checkin:()=>{S.checkins=S.checkins.includes(today())?S.checkins.filter(d=>d!==today()):[...S.checkins,today()];commit()},
+  moveLate:()=>{const before=S.schedules.map(s=>({...s})),t=iso(addDays(1));S.schedules.filter(isLate).forEach(s=>{s.date=t;s.fired=false;delete s.snooze});commit();toast('Dipindahkan ke besok.',()=>S.schedules=before)},
+  clearSample:()=>{const a=S.schedules,b=S.todos;S.schedules=a.filter(x=>!x.sample);S.todos=b.filter(x=>!x.sample);commit();toast('Data contoh dihapus.',()=>{S.schedules=a;S.todos=b})},
+  mode:id=>{ui.mode=id;render()},
+  month:n=>{const m=ui.month;ui.month=+n?new Date(m.getFullYear(),m.getMonth()+ +n,1):new Date();if(!+n)ui.pick=today();render()},
+  pick:id=>{ui.pick=id;render()},
+
+  filterNoteFolder:id=>{ui.noteFolder=id;render()},
+  newFolder:openNewFolderModal,
+  importNoteFile:()=>$('#noteFileImp')?.click(),
+  exportNote:id=>{
+    const n=S.notes.find(x=>x.id===id)||curNote();
+    const content=`# ${n.title||'Tanpa judul'}\nFolder: ${getFolderName(n.folder)}\n\n${n.body||''}`;
+    const blob=new Blob([content],{type:'text/markdown;charset=utf-8'});
+    const a=document.createElement('a');
+    const slug=(n.title||'catatan').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'catatan';
+    a.href=URL.createObjectURL(blob);a.download=`${slug}.md`;a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    toast(`File "${slug}.md" diunduh.`);
+  },
+  goNotesFolder:folderId=>{ui.noteFolder=folderId||'all';ui.page='notes';render();scrollTo(0,0)},
+  jumpToNote:id=>{ui.note=id;ui.noteFolder='all';ui.page='notes';render();scrollTo(0,0)},
+  newNoteInFolder:folderId=>{
+    ensureFolders(S);
+    const n={id:uid(),folder:folderId||'tugas',title:'',updatedAt:today(),body:''};
+    S.notes.unshift(n);ui.note=n.id;ui.noteFolder=folderId||'all';ui.page='notes';commit();$('#noteTitle')?.focus();
+  },
+  openNote:id=>{ui.note=id;render()},
+  newNote:()=>{
+    ensureFolders(S);
+    const folder=ui.noteFolder==='all'?'tugas':ui.noteFolder;
+    const n={id:uid(),folder,title:'',updatedAt:today(),body:''};
+    S.notes.unshift(n);ui.note=n.id;commit();$('#noteTitle')?.focus();
+  },
+  delNote:id=>removeFrom('notes',id,'File catatan'),
+  snooze:id=>{const s=find(id);if(s){s.fired=false;s.snooze=Date.now()+600000;save()}dlg.close()},
+  alarmDone:id=>{const s=find(id);if(s)setDone(s,true);dlg.close();commit()}
+};
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');
+  if(b){ACT[b.dataset.act]?.(b.dataset.id);return}
+  if(e.target===dlg)dlg.close();
+  if(ui.calPopOpen&&!e.target.closest('#calPopover')&&!e.target.closest('#calWidgetBtn')){ui.calPopOpen=false;render()}
+});
+
+document.addEventListener('submit',e=>{
+  e.preventDefault();const f=e.target,v=Object.fromEntries(new FormData(f));
+  if(f.id==='authForm'){
+    const email=(v.email||'').trim().toLowerCase(),pass=(v.password||'').trim(),errEl=$('#authError');
+    errEl.hidden=true;const users=getUsers();
+    if(ui.authMode==='signup'){
+      const name=(v.name||'').trim();
+      if(!name){errEl.textContent='Isi nama lengkapmu terlebih dahulu.';errEl.hidden=false;return}
+      if(users.some(u=>u.email===email)){errEl.textContent='Email ini sudah terdaftar. Silakan masuk.';errEl.hidden=false;return}
+      const newUser={id:uid(),name,email,password:pass,profile:null};
+      users.push(newUser);saveUsers(users);
+      currentUser={id:newUser.id,name:newUser.name,email:newUser.email,profile:null};setSession(currentUser);
+      ui.onbStep=1;ui.screen='onboarding';f.reset();render();
+    } else {
+      const found=users.find(u=>u.email===email&&u.password===pass);
+      if(!found){errEl.textContent='Email atau kata sandi salah.';errEl.hidden=false;return}
+      currentUser={id:found.id,name:found.name,email:found.email,profile:found.profile||null};setSession(currentUser);f.reset();
+      if(!currentUser.profile){ui.onbStep=1;ui.screen='onboarding';render()}
+      else{
+        S=loadUserData(currentUser);ui.screen='app';ui.page='today';render();
+        const first=(currentUser.name||'u').split(' ')[0];
+        playWelcome({headline:`Hi ${first}, welcome home`,subtext:`Menyiapkan jadwal & catatan ${currentUser.profile.roleLabel} hari ini...`});
+      }
+    }
+    return;
+  }
+  if(f.id==='quickForm'){
+    const inp=$('#quickInp');if(!inp.value.trim())return inp.focus();
+    const p=parseQuick(inp.value);
+    if(!p.title){$('#preview').textContent='Tambahkan nama kegiatannya, misalnya "Olahraga jam 6 pagi".';return}
+    inp.value='';updatePreview();addSchedule(p);
+  }else if(f.dataset.form==='todo'){
+    if(!v.text.trim())return;S.todos.push({id:uid(),text:v.text.trim(),done:false});commit();$('#todoInp').focus();
+  }else if(f.dataset.form==='sched'){
+    if(!v.title.trim())return;v.title=v.title.trim();const s=find(f.dataset.id);dlg.close();
+    if(s){const moved=s.date!==v.date||s.time!==v.time;Object.assign(s,v,{sample:false});if(moved){s.fired=at(s)<new Date();delete s.snooze}commit();toast('Perubahan disimpan.')}
+    else addSchedule(v);
+  }else if(f.dataset.form==='break'){
+    const added=v.steps.split('\n').map(x=>x.trim()).filter(Boolean).map(x=>({id:uid(),text:`${v.task.trim()}: ${x}`,done:false}));
+    S.todos.push(...added);dlg.close();commit();toast(`${added.length} langkah masuk ke To-do.`,()=>S.todos=S.todos.filter(t=>!added.includes(t)));
+  }else if(f.dataset.form==='newFolder'){
+    const name=(v.name||'').trim();if(!name)return;
+    ensureFolders(S);const id='fld_'+uid();
+    S.folders.push({id,name});ui.noteFolder=id;dlg.close();commit();
+    toast(`Folder "${name}" dibuat.`);
+  }
+});
+
+function updatePreview(){
+  const val=$('#quickInp').value,el=$('#preview');
+  if(!val.trim())return el.textContent='Ketik kegiatan beserta waktunya, lalu tekan Enter.';
+  const p=parseQuick(val);
+  el.innerHTML=`Akan disimpan: <b>${esc(p.title||'(belum ada nama)')}</b>, ${niceDate(p.date)} pukul ${p.time}`;
+}
+$('#quickInp')?.addEventListener('input',updatePreview);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&ui.calPopOpen){ui.calPopOpen=false;render();return}
+  if(ui.screen==='app'&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();ui.calPopOpen=false;openSearch()}
+});
+
+let lastMinute=new Date().getMinutes();
+setInterval(()=>{
+  checkAlarm();tickFocus();
+  const m=new Date().getMinutes();
+  if(m!==lastMinute){lastMinute=m;
+    if(ui.day!==today()){ui.day=ui.pick=ui.wPick=today()}
+    if(ui.screen==='app'&&!document.activeElement?.matches('input,textarea'))render();
+  }
+},1000);
+render();
+if(currentUser&&ui.screen==='app'){
+  const first=(currentUser.name||'u').split(' ')[0];
+  playWelcome({headline:`Hi ${first}, welcome home`,subtext:'Selamat datang kembali di UApps.',duration:1800});
+}
+checkAlarm();
+</script>
+</body>
+</html>
